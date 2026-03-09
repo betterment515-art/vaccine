@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>아이 예방접종 일정</title>
+
+<style>
+
+body{
+font-family:-apple-system,BlinkMacSystemFont,Apple SD Gothic Neo;
+max-width:720px;
+margin:auto;
+padding:20px;
+background:#f6f8fb;
+}
+
+h1{
+font-size:26px;
+}
+
+.today{
+color:#666;
+margin-bottom:20px;
+}
+
+input{
+padding:8px;
+font-size:16px;
+}
+
+button{
+padding:8px 14px;
+font-size:16px;
+margin-left:6px;
+}
+
+.tabs{
+display:flex;
+margin-top:25px;
+border-bottom:2px solid #ddd;
+}
+
+.tab{
+padding:12px 16px;
+cursor:pointer;
+}
+
+.tab.active{
+border-bottom:3px solid #2f80ed;
+color:#2f80ed;
+font-weight:bold;
+}
+
+.section{
+display:none;
+}
+
+.section.active{
+display:block;
+}
+
+.card{
+background:white;
+padding:14px;
+margin-top:12px;
+border-radius:10px;
+box-shadow:0 2px 8px rgba(0,0,0,0.06);
+}
+
+.now{border-left:6px solid #ff6b6b}
+.next{border-left:6px solid #2f80ed}
+.past{border-left:6px solid #adb5bd}
+
+.title{
+font-weight:bold;
+font-size:16px;
+margin-bottom:6px;
+}
+
+.period{
+color:#666;
+font-size:14px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>👶 아이 예방접종 일정</h1>
+
+<div class="today" id="today"></div>
+
+생년월일 입력  
+<input type="date" id="birth">
+<button onclick="calc()">확인</button>
+
+<h3 id="age"></h3>
+
+<div class="tabs">
+<div class="tab active" onclick="showTab('now',this)">현재 일정</div>
+<div class="tab" onclick="showTab('next',this)">다음 일정</div>
+<div class="tab" onclick="showTab('past',this)">지난 일정</div>
+</div>
+
+<div id="now" class="section active"></div>
+<div id="next" class="section"></div>
+<div id="past" class="section"></div>
+
+<script>
+
+const todayDate=new Date()
+document.getElementById("today").innerHTML=
+"오늘 날짜 : "+todayDate.toLocaleDateString()
+
+const schedules=[
+
+{ name:"결핵(BCG)", start:0, end:1, type:"예방접종" },
+
+{ name:"B형간염 1차", start:0, end:0, type:"예방접종" },
+{ name:"B형간염 2차", start:1, end:2, type:"예방접종" },
+{ name:"B형간염 3차", start:6, end:7, type:"예방접종" },
+
+{ name:"디프테리아·파상풍·백일해 1차", start:2, end:3, type:"예방접종" },
+{ name:"디프테리아·파상풍·백일해 2차", start:4, end:5, type:"예방접종" },
+{ name:"디프테리아·파상풍·백일해 3차", start:6, end:7, type:"예방접종" },
+{ name:"디프테리아·파상풍·백일해 4차", start:15, end:18, type:"예방접종" },
+{ name:"디프테리아·파상풍·백일해 5차", start:48, end:72, type:"예방접종" },
+
+{ name:"폴리오 1차", start:2, end:3, type:"예방접종" },
+{ name:"폴리오 2차", start:4, end:5, type:"예방접종" },
+{ name:"폴리오 3차", start:6, end:7, type:"예방접종" },
+{ name:"폴리오 4차", start:48, end:72, type:"예방접종" },
+
+{ name:"홍역·유행성이하선염·풍진(MMR) 1차", start:12, end:15, type:"예방접종" },
+{ name:"홍역·유행성이하선염·풍진(MMR) 2차", start:48, end:72, type:"예방접종" },
+
+{ name:"수두", start:12, end:15, type:"예방접종" },
+
+{ name:"A형간염 1차", start:12, end:23, type:"예방접종" },
+{ name:"A형간염 2차", start:18, end:30, type:"예방접종" },
+
+{ name:"사람유두종바이러스(HPV)", start:132, end:144, type:"예방접종" },
+
+{ name:"구강검진 1차", start:18, end:29, type:"구강검진" },
+{ name:"구강검진 2차", start:42, end:53, type:"구강검진" },
+{ name:"구강검진 3차", start:54, end:65, type:"구강검진" }
+
+]
+
+function addMonth(date,months){
+
+let d=new Date(date)
+d.setMonth(d.getMonth()+months)
+
+return d.toISOString().split("T")[0]
+
+}
+
+function showTab(id,el){
+
+document.querySelectorAll(".section").forEach(s=>{
+s.classList.remove("active")
+})
+
+document.getElementById(id).classList.add("active")
+
+document.querySelectorAll(".tab").forEach(t=>{
+t.classList.remove("active")
+})
+
+el.classList.add("active")
+
+}
+
+function calc(){
+
+const birth=document.getElementById("birth").value
+
+if(!birth){
+alert("생년월일 입력")
+return
+}
+
+const birthDate=new Date(birth)
+const today=new Date()
+
+let ageMonth=
+(today.getFullYear()-birthDate.getFullYear())*12+
+(today.getMonth()-birthDate.getMonth())
+
+let ageYear=Math.floor(ageMonth/12)
+let remain=ageMonth%12
+
+document.getElementById("age").innerHTML=
+"현재 나이 : "+ageYear+"세 "+remain+"개월 ("+ageMonth+"개월)"
+
+const nowBox=document.getElementById("now")
+const nextBox=document.getElementById("next")
+const pastBox=document.getElementById("past")
+
+nowBox.innerHTML=""
+nextBox.innerHTML=""
+pastBox.innerHTML=""
+
+let nextFound=false
+
+schedules.forEach(v=>{
+
+let startDate=addMonth(birthDate,v.start)
+let endDate=addMonth(birthDate,v.end)
+
+if(ageMonth>=v.start && ageMonth<=v.end){
+
+let div=document.createElement("div")
+div.className="card now"
+
+div.innerHTML=
+"<div class='title'>"+v.name+"</div>"+
+"<div>"+v.type+"</div>"+
+"<div class='period'>접종 가능 기간 : "+startDate+" ~ "+endDate+"</div>"
+
+nowBox.appendChild(div)
+
+}
+
+else if(ageMonth < v.start && !nextFound){
+
+let div=document.createElement("div")
+div.className="card next"
+
+div.innerHTML=
+"<div class='title'>"+v.name+"</div>"+
+"<div>"+v.type+"</div>"+
+"<div class='period'>접종 가능 기간 : "+startDate+" ~ "+endDate+"</div>"
+
+nextBox.appendChild(div)
+
+nextFound=true
+
+}
+
+else if(ageMonth > v.end){
+
+let div=document.createElement("div")
+div.className="card past"
+
+div.innerHTML=
+"<div class='title'>"+v.name+"</div>"+
+"<div>"+v.type+"</div>"+
+"<div class='period'>접종 가능 기간 : "+startDate+" ~ "+endDate+"</div>"
+
+pastBox.appendChild(div)
+
+}
+
+})
+
+}
+
+</script>
+
+</body>
+</html>
